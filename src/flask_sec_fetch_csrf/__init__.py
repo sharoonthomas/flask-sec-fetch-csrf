@@ -31,7 +31,9 @@ Application factory pattern::
 :license: BSD-3-Clause, see LICENSE for more details.
 """
 
-__version__ = "0.1.0"
+from importlib.metadata import version
+
+__version__ = version("flask-sec-fetch-csrf")
 
 from .exceptions import CSRFError
 from .extension import SecFetchCSRF

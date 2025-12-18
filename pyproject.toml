@@ -46,6 +46,7 @@ Issues = "https://github.com/fulfilio/flask-sec-fetch-csrf/issues"
 requires = ["uv_build>=0.6.17,<0.7"]
 build-backend = "uv_build"
 
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra -q"
