@@ -10,6 +10,7 @@ https://words.filippo.io/csrf/
 4. If no Sec-Fetch-Site AND no Origin: Allow (non-browser client)
 5. If Origin present: Compare against Host header
 """
+
 import pytest
 from flask import Blueprint, Flask
 
@@ -25,8 +26,7 @@ class TestSafeMethods:
         client = app.test_client()
         # Even with cross-site header, safe methods should pass
         response = getattr(client, method.lower())(
-            "/",
-            headers={"Sec-Fetch-Site": "cross-site"}
+            "/", headers={"Sec-Fetch-Site": "cross-site"}
         )
         assert response.status_code == 200
 
@@ -44,7 +44,7 @@ class TestTrustedOrigins:
             headers={
                 "Origin": "https://trusted.example.com",
                 "Sec-Fetch-Site": "cross-site",
-            }
+            },
         )
         assert response.status_code == 200
 
@@ -58,7 +58,7 @@ class TestTrustedOrigins:
             headers={
                 "Origin": "https://evil.example.com",
                 "Sec-Fetch-Site": "cross-site",
-            }
+            },
         )
         assert response.status_code == 403
 
@@ -68,35 +68,23 @@ class TestSecFetchSite:
 
     def test_same_origin_allowed(self, client):
         """same-origin requests should always be allowed."""
-        response = client.post(
-            "/submit",
-            headers={"Sec-Fetch-Site": "same-origin"}
-        )
+        response = client.post("/submit", headers={"Sec-Fetch-Site": "same-origin"})
         assert response.status_code == 200
 
     def test_none_allowed(self, client):
         """none (user-initiated) requests should be allowed."""
-        response = client.post(
-            "/submit",
-            headers={"Sec-Fetch-Site": "none"}
-        )
+        response = client.post("/submit", headers={"Sec-Fetch-Site": "none"})
         assert response.status_code == 200
 
     def test_cross_site_blocked(self, client):
         """cross-site requests should be blocked."""
-        response = client.post(
-            "/submit",
-            headers={"Sec-Fetch-Site": "cross-site"}
-        )
+        response = client.post("/submit", headers={"Sec-Fetch-Site": "cross-site"})
         assert response.status_code == 403
         assert b"Cross-site requests are not allowed" in response.data
 
     def test_same_site_blocked_by_default(self, client):
         """same-site requests should be blocked by default."""
-        response = client.post(
-            "/submit",
-            headers={"Sec-Fetch-Site": "same-site"}
-        )
+        response = client.post("/submit", headers={"Sec-Fetch-Site": "same-site"})
         assert response.status_code == 403
         assert b"Same-site requests are not allowed" in response.data
 
@@ -105,18 +93,12 @@ class TestSecFetchSite:
         app.config["SEC_FETCH_CSRF_ALLOW_SAME_SITE"] = True
         client = app.test_client()
 
-        response = client.post(
-            "/submit",
-            headers={"Sec-Fetch-Site": "same-site"}
-        )
+        response = client.post("/submit", headers={"Sec-Fetch-Site": "same-site"})
         assert response.status_code == 200
 
     def test_unknown_value_blocked(self, client):
         """Unknown Sec-Fetch-Site values should be blocked."""
-        response = client.post(
-            "/submit",
-            headers={"Sec-Fetch-Site": "unknown-value"}
-        )
+        response = client.post("/submit", headers={"Sec-Fetch-Site": "unknown-value"})
         assert response.status_code == 403
         assert b"Unknown Sec-Fetch-Site value" in response.data
 
@@ -132,8 +114,7 @@ class TestMissingHeaders:
     def test_only_user_agent_allowed(self, client):
         """Requests with only User-Agent should pass (API client)."""
         response = client.post(
-            "/submit",
-            headers={"User-Agent": "python-requests/2.28.0"}
+            "/submit", headers={"User-Agent": "python-requests/2.28.0"}
         )
         assert response.status_code == 200
 
@@ -143,18 +124,12 @@ class TestOriginValidation:
 
     def test_matching_origin_allowed(self, client):
         """Origin matching Host header should pass."""
-        response = client.post(
-            "/submit",
-            headers={"Origin": "http://localhost"}
-        )
+        response = client.post("/submit", headers={"Origin": "http://localhost"})
         assert response.status_code == 200
 
     def test_mismatched_origin_blocked(self, client):
         """Origin not matching Host header should be blocked."""
-        response = client.post(
-            "/submit",
-            headers={"Origin": "https://evil.com"}
-        )
+        response = client.post("/submit", headers={"Origin": "https://evil.com"})
         assert response.status_code == 403
         assert b"Origin mismatch" in response.data
 
@@ -163,10 +138,7 @@ class TestOriginValidation:
         client = app.test_client()
 
         # Flask test client uses 'localhost' as host
-        response = client.post(
-            "/submit",
-            headers={"Origin": "http://localhost"}
-        )
+        response = client.post("/submit", headers={"Origin": "http://localhost"})
         assert response.status_code == 200
 
 
@@ -185,10 +157,7 @@ class TestExemption:
         csrf.init_app(app)
         client = app.test_client()
 
-        response = client.post(
-            "/webhook",
-            headers={"Sec-Fetch-Site": "cross-site"}
-        )
+        response = client.post("/webhook", headers={"Sec-Fetch-Site": "cross-site"})
         assert response.status_code == 200
 
     def test_exempt_blueprint(self, app):
@@ -207,8 +176,7 @@ class TestExemption:
 
         client = app.test_client()
         response = client.post(
-            "/api/endpoint",
-            headers={"Sec-Fetch-Site": "cross-site"}
+            "/api/endpoint", headers={"Sec-Fetch-Site": "cross-site"}
         )
         assert response.status_code == 200
 
@@ -219,21 +187,15 @@ class TestConfiguration:
     def test_custom_methods(self, app):
         """SEC_FETCH_CSRF_METHODS should control which methods are protected."""
         app.config["SEC_FETCH_CSRF_METHODS"] = ["POST"]  # Only POST
-        csrf = SecFetchCSRF(app)
+        SecFetchCSRF(app)
         client = app.test_client()
 
         # PUT should now pass without validation
-        response = client.put(
-            "/update",
-            headers={"Sec-Fetch-Site": "cross-site"}
-        )
+        response = client.put("/update", headers={"Sec-Fetch-Site": "cross-site"})
         assert response.status_code == 200
 
         # POST should still be protected
-        response = client.post(
-            "/submit",
-            headers={"Sec-Fetch-Site": "cross-site"}
-        )
+        response = client.post("/submit", headers={"Sec-Fetch-Site": "cross-site"})
         assert response.status_code == 403
 
 
@@ -258,10 +220,7 @@ class TestFactoryPattern:
         app = create_app()
         client = app.test_client()
 
-        response = client.post(
-            "/submit",
-            headers={"Sec-Fetch-Site": "same-origin"}
-        )
+        response = client.post("/submit", headers={"Sec-Fetch-Site": "same-origin"})
         assert response.status_code == 200
 
     def test_multiple_apps(self):
@@ -288,17 +247,11 @@ class TestFactoryPattern:
         client1 = app1.test_client()
         client2 = app2.test_client()
 
-        response1 = client1.post(
-            "/submit",
-            headers={"Sec-Fetch-Site": "same-origin"}
-        )
+        response1 = client1.post("/submit", headers={"Sec-Fetch-Site": "same-origin"})
         assert response1.status_code == 200
         assert response1.data == b"APP1"
 
-        response2 = client2.post(
-            "/submit",
-            headers={"Sec-Fetch-Site": "same-origin"}
-        )
+        response2 = client2.post("/submit", headers={"Sec-Fetch-Site": "same-origin"})
         assert response2.status_code == 200
         assert response2.data == b"APP2"
 
@@ -308,22 +261,17 @@ class TestErrorHandling:
 
     def test_default_error_response(self, client):
         """Default error should be 403 Forbidden."""
-        response = client.post(
-            "/submit",
-            headers={"Sec-Fetch-Site": "cross-site"}
-        )
+        response = client.post("/submit", headers={"Sec-Fetch-Site": "cross-site"})
         assert response.status_code == 403
 
     def test_custom_error_handler(self, app, csrf):
         """Custom error handler should be called on CSRF failure."""
+
         @app.errorhandler(CSRFError)
         def handle_csrf_error(error):
             return {"error": "Custom CSRF error", "reason": str(error)}, 418
 
         client = app.test_client()
-        response = client.post(
-            "/submit",
-            headers={"Sec-Fetch-Site": "cross-site"}
-        )
+        response = client.post("/submit", headers={"Sec-Fetch-Site": "cross-site"})
         assert response.status_code == 418
         assert b"Custom CSRF error" in response.data

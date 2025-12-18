@@ -1,6 +1,7 @@
 """
 Custom exceptions for flask-sec-fetch-csrf.
 """
+
 from werkzeug.exceptions import Forbidden
 
 

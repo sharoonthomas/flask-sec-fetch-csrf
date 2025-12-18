@@ -4,6 +4,7 @@ Flask application using the factory pattern with CSRF protection.
 Run with:
     flask --app examples.factory_pattern:create_app run
 """
+
 from flask import Blueprint, Flask
 
 from flask_sec_fetch_csrf import SecFetchCSRF

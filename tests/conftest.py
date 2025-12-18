@@ -1,6 +1,7 @@
 """
 pytest fixtures for flask-sec-fetch-csrf tests.
 """
+
 import pytest
 from flask import Flask
 

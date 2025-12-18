@@ -4,6 +4,7 @@ Basic Flask application with CSRF protection.
 Run with:
     flask --app examples/basic_app run
 """
+
 from flask import Flask, render_template_string
 
 from flask_sec_fetch_csrf import SecFetchCSRF

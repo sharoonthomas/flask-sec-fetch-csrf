@@ -8,6 +8,7 @@ fallback to Origin header validation for older browsers.
 The implementation follows the algorithm recommended by Filippo Valsorda:
 https://words.filippo.io/csrf/
 """
+
 from urllib.parse import urlparse
 
 from flask import Blueprint, current_app, g, request
