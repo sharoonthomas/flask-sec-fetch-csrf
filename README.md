@@ -1,6 +1,6 @@
-# flask-sec-fetch-csrf
+# CSRF protection for Flask using the `Sec-Fetch-Site` header
 
-CSRF protection for Flask using the `Sec-Fetch-Site` header.
+![flask-sec-fetch-csrf](https://github.com/fulfilio/flask-sec-fetch-csrf/raw/master/flask-sec-fetch-csrf.jpg)
 
 This extension protects your Flask application from Cross-Site Request Forgery (CSRF) attacks by validating the `Sec-Fetch-Site` header sent by modern browsers. Unlike token-based CSRF protection, this approach requires no form modifications, no session storage, and no JavaScript integration.
 
@@ -309,7 +309,7 @@ csrf = SecFetchCSRF(app)
 
 ## Examples
 
-See the [examples directory](examples/README.md) for a demo application that shows CSRF protection in action, including how to simulate cross-site attacks.
+See the [examples directory](https://github.com/fulfilio/flask-sec-fetch-csrf/tree/master/examples) for a demo application that shows CSRF protection in action, including how to simulate cross-site attacks.
 
 ## References
 
@@ -320,4 +320,4 @@ See the [examples directory](examples/README.md) for a demo application that sho
 
 ## License
 
-BSD-3-Clause License. See [LICENSE](LICENSE) for details.
+BSD-3-Clause License. See [LICENSE](https://github.com/fulfilio/flask-sec-fetch-csrf/blob/master/LICENSE) for details.
