@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Totally Legit Website</title>
+</head>
+<body>
+    <h1>You won a prize!</h1>
+    <p>Click the button to claim your $1,000,000:</p>
+
+    <!-- This form targets your Flask app running on port 5000 -->
+    <form action="http://127.0.0.1:5000/transfer" method="POST" id="evil-form">
+        <input type="hidden" name="to" value="attacker">
+        <input type="hidden" name="amount" value="10000">
+        <button type="submit">Claim Prize</button>
+    </form>
+
+    <hr>
+    <h2>What's happening?</h2>
+    <p>This page is served from a different origin (port 8000).</p>
+    <p>When you submit the form, the browser sends:</p>
+    <pre>Sec-Fetch-Site: cross-site</pre>
+    <p>The Flask app will reject it with <strong>403 Forbidden</strong>.</p>
+
+    <h2>Test Results</h2>
+    <div id="result" style="padding: 10px; margin: 10px 0; border: 1px solid #ccc;">
+        Submit the form to see the result...
+    </div>
+
+    <script>
+        document.getElementById('evil-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const resultDiv = document.getElementById('result');
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: new FormData(form),
+                });
+
+                const text = await response.text();
+                resultDiv.innerHTML = `
+                    <strong>Status:</strong> ${response.status} ${response.statusText}<br>
+                    <strong>Response:</strong> <pre>${text}</pre>
+                `;
+                resultDiv.style.background = response.ok ? '#d4edda' : '#f8d7da';
+            } catch (error) {
+                resultDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+                resultDiv.style.background = '#f8d7da';
+            }
+        });
+    </script>
+</body>
+</html>

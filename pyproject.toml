@@ -1,0 +1,58 @@
+[project]
+name = "flask-sec-fetch-csrf"
+version = "0.1.0"
+description = "CSRF protection for Flask using Sec-Fetch-Site header"
+readme = "README.md"
+license = "BSD-3-Clause"
+requires-python = ">=3.9"
+authors = [
+    { name = "Sharoon Thomas", email = "sharoon.thomas@fulfil.io" }
+]
+keywords = ["flask", "csrf", "security", "sec-fetch-site", "fetch-metadata"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Web Environment",
+    "Framework :: Flask",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP :: WSGI :: Middleware",
+    "Topic :: Security",
+]
+dependencies = [
+    "flask>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/fulfilio/flask-sec-fetch-csrf"
+Documentation = "https://github.com/fulfilio/flask-sec-fetch-csrf#readme"
+Repository = "https://github.com/fulfilio/flask-sec-fetch-csrf"
+Issues = "https://github.com/fulfilio/flask-sec-fetch-csrf/issues"
+
+[build-system]
+requires = ["uv_build>=0.6.17,<0.7"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q"
+
+[tool.ruff]
+target-version = "py39"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM"]
