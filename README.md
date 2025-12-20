@@ -4,97 +4,24 @@
 
 This extension protects your Flask application from Cross-Site Request Forgery (CSRF) attacks by validating the `Sec-Fetch-Site` header sent by modern browsers. Unlike token-based CSRF protection, this approach requires no form modifications, no session storage, and no JavaScript integration.
 
-## Motivation
+## Table of Contents
 
-### The HTMX Problem
-
-If you've used [HTMX](https://htmx.org/) with Flask-WTF's CSRF protection, you know the pain:
-
-```html
-<!-- Every HTMX element needs the token -->
-<button hx-post="/api/action"
-        hx-headers='{"X-CSRFToken": "{{ csrf_token() }}"}'>
-    Click me
-</button>
-```
-
-Or you set up global headers:
-
-```html
-<meta name="csrf-token" content="{{ csrf_token() }}">
-<script>
-  document.body.addEventListener('htmx:configRequest', (event) => {
-    event.detail.headers['X-CSRFToken'] = document.querySelector('meta[name="csrf-token"]').content;
-  });
-</script>
-```
-
-This is tedious, error-prone, and breaks when tokens expire. With `Sec-Fetch-Site`, HTMX just works:
-
-```html
-<!-- No token needed. The browser handles it. -->
-<button hx-post="/api/action">Click me</button>
-```
-
-### Token Fatigue
-
-Traditional CSRF tokens create ongoing friction:
-
-- **Cached pages** serve stale tokens
-- **Expired sessions** invalidate tokens mid-form
-- **AJAX requests** need manual token injection
-- **Multi-tab usage** can cause token mismatches
-- **API clients** need special handling to skip tokens
-
-The `Sec-Fetch-Site` header eliminates all of this. The browser sends it automatically, it never expires, and it works consistently across all request types.
-
-## Inspiration
-
-This extension was inspired by:
-
-- [**Rails PR #56350**](https://github.com/rails/rails/pull/56350) — Rails 8.2 is adopting `Sec-Fetch-Site` as its primary CSRF defense, moving away from tokens
-- [**Flask-WTF**](https://flask-wtf.readthedocs.io/) — The established Flask CSRF solution, whose API patterns influenced this extension
-- [**Filippo Valsorda's "CSRF"**](https://words.filippo.io/csrf/) — The algorithm and rationale behind header-based CSRF protection
-
-## What is CSRF?
-
-Cross-Site Request Forgery (CSRF) is an attack that tricks users into performing unwanted actions on a website where they're authenticated.
-
-**How it works:**
-
-1. You log into your bank at `bank.example.com`
-2. Your browser stores a session cookie
-3. You visit a malicious site that contains:
-   ```html
-   <form action="https://bank.example.com/transfer" method="POST">
-     <input type="hidden" name="to" value="attacker">
-     <input type="hidden" name="amount" value="10000">
-   </form>
-   <script>document.forms[0].submit();</script>
-   ```
-4. Your browser sends the request **with your session cookie**
-5. The bank processes the transfer because it looks like a legitimate request
-
-The key insight is that browsers automatically include cookies with requests, even when those requests originate from other sites.
-
-## How This Extension Protects You
-
-Modern browsers send the `Sec-Fetch-Site` header with every request, indicating where the request originated:
-
-| Value | Meaning | Action |
-|-------|---------|--------|
-| `same-origin` | Request from same origin (scheme + host + port) | ✅ Allow |
-| `none` | User typed URL or used bookmark | ✅ Allow |
-| `same-site` | Request from same site (e.g., subdomain) | ❌ Deny by default |
-| `cross-site` | Request from different site | ❌ Deny |
-
-This extension implements the algorithm recommended by [Filippo Valsorda](https://words.filippo.io/csrf/):
-
-1. **Allow safe methods** — GET, HEAD, OPTIONS don't modify state
-2. **Check trusted origins** — Explicitly allowed cross-origin sources
-3. **Validate Sec-Fetch-Site** — Allow `same-origin` or `none`, reject others
-4. **Handle missing header** — Allow if no `Origin` header either (non-browser client)
-5. **Fallback to Origin** — For older browsers, compare `Origin` against `Host`
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Configuration](#configuration)
+- [Exempting Routes](#exempting-routes)
+- [Error Handling](#error-handling)
+- [Browser Support](#browser-support)
+- [API Clients and Non-Browser Requests](#api-clients-and-non-browser-requests)
+- [Motivation](#motivation)
+- [What is CSRF?](#what-is-csrf)
+- [How This Extension Protects You](#how-this-extension-protects-you)
+- [Comparison with Token-Based CSRF](#comparison-with-token-based-csrf)
+- [Security Considerations](#security-considerations)
+- [Migrating from Flask-WTF](#migrating-from-flask-wtf)
+- [Examples](#examples)
+- [References](#references)
+- [License](#license)
 
 ## Installation
 
@@ -156,7 +83,7 @@ If you trust all subdomains of your site:
 app.config['SEC_FETCH_CSRF_ALLOW_SAME_SITE'] = True
 ```
 
-⚠️ **Warning:** Only enable this if you trust all subdomains. A compromised subdomain could perform CSRF attacks.
+**Warning:** Only enable this if you trust all subdomains. A compromised subdomain could perform CSRF attacks.
 
 ### Trusted Origins
 
@@ -231,6 +158,98 @@ Requests without browser headers (no `Sec-Fetch-Site` and no `Origin`) are allow
 - Mobile apps using native HTTP clients
 
 If a request has an `Origin` header but no `Sec-Fetch-Site`, the extension validates that the `Origin` matches the `Host` header.
+
+## Motivation
+
+### The HTMX Problem
+
+If you've used [HTMX](https://htmx.org/) with Flask-WTF's CSRF protection, you know the pain:
+
+```html
+<!-- Every HTMX element needs the token -->
+<button hx-post="/api/action"
+        hx-headers='{"X-CSRFToken": "{{ csrf_token() }}"}'>
+    Click me
+</button>
+```
+
+Or you set up global headers:
+
+```html
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<script>
+  document.body.addEventListener('htmx:configRequest', (event) => {
+    event.detail.headers['X-CSRFToken'] = document.querySelector('meta[name="csrf-token"]').content;
+  });
+</script>
+```
+
+This is tedious, error-prone, and breaks when tokens expire. With `Sec-Fetch-Site`, HTMX just works:
+
+```html
+<!-- No token needed. The browser handles it. -->
+<button hx-post="/api/action">Click me</button>
+```
+
+### Token Fatigue
+
+Traditional CSRF tokens create ongoing friction:
+
+- **Cached pages** serve stale tokens
+- **Expired sessions** invalidate tokens mid-form
+- **AJAX requests** need manual token injection
+- **Multi-tab usage** can cause token mismatches
+- **API clients** need special handling to skip tokens
+
+The `Sec-Fetch-Site` header eliminates all of this. The browser sends it automatically, it never expires, and it works consistently across all request types.
+
+### Inspiration
+
+This extension was inspired by:
+
+- [**Rails PR #56350**](https://github.com/rails/rails/pull/56350) — Rails 8.2 is adopting `Sec-Fetch-Site` as its primary CSRF defense, moving away from tokens
+- [**Flask-WTF**](https://flask-wtf.readthedocs.io/) — The established Flask CSRF solution, whose API patterns influenced this extension
+- [**Filippo Valsorda's "CSRF"**](https://words.filippo.io/csrf/) — The algorithm and rationale behind header-based CSRF protection
+
+## What is CSRF?
+
+Cross-Site Request Forgery (CSRF) is an attack that tricks users into performing unwanted actions on a website where they're authenticated.
+
+**How it works:**
+
+1. You log into your bank at `bank.example.com`
+2. Your browser stores a session cookie
+3. You visit a malicious site that contains:
+   ```html
+   <form action="https://bank.example.com/transfer" method="POST">
+     <input type="hidden" name="to" value="attacker">
+     <input type="hidden" name="amount" value="10000">
+   </form>
+   <script>document.forms[0].submit();</script>
+   ```
+4. Your browser sends the request **with your session cookie**
+5. The bank processes the transfer because it looks like a legitimate request
+
+The key insight is that browsers automatically include cookies with requests, even when those requests originate from other sites.
+
+## How This Extension Protects You
+
+Modern browsers send the `Sec-Fetch-Site` header with every request, indicating where the request originated:
+
+| Value | Meaning | Action |
+|-------|---------|--------|
+| `same-origin` | Request from same origin (scheme + host + port) | Allow |
+| `none` | User typed URL or used bookmark | Allow |
+| `same-site` | Request from same site (e.g., subdomain) | Deny by default |
+| `cross-site` | Request from different site | Deny |
+
+This extension implements the algorithm recommended by [Filippo Valsorda](https://words.filippo.io/csrf/):
+
+1. **Allow safe methods** — GET, HEAD, OPTIONS don't modify state
+2. **Check trusted origins** — Explicitly allowed cross-origin sources
+3. **Validate Sec-Fetch-Site** — Allow `same-origin` or `none`, reject others
+4. **Handle missing header** — Allow if no `Origin` header either (non-browser client)
+5. **Fallback to Origin** — For older browsers, compare `Origin` against `Host`
 
 ## Comparison with Token-Based CSRF
 
